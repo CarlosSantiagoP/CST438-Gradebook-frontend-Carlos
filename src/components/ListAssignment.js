@@ -32,6 +32,9 @@ function ListAssignment(props) {
         <h3>Assignments</h3>
         <div margin="auto" >
           <h4>{message}&nbsp;</h4>
+          <button>
+                    <Link to={`/addAssignment`} >Add Assignment</Link>
+          </button>
               <table className="Center"> 
                 <thead>
                   <tr>
