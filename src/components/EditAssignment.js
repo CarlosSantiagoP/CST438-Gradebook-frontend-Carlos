@@ -1,100 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { SERVER_URL } from '../constants';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import {SERVER_URL} from '../constants';
+
 
 function EditAssignment(props) {
-  const [assignment, setAssignment] = useState({});
-  const [message, setMessage] = useState('');
 
-  const assignmentId = props.match.params.id;
+    const [open, setOpen] = useState(false);
+    const [message, setMessage] = useState('');
+    const [assignment, setAssignment] = useState(props.assignment)
 
-  useEffect(() => {
-    fetchAssignment();
-  }, []);
+    const handleOpen = () => {
+        setMessage('');
+        setOpen(true);
+    };
 
-  const fetchAssignment = () => {
-    setMessage('');
-    fetch(`${SERVER_URL}/assignment/${assignmentId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setAssignment(data);
-      })
-      .catch((err) => {
-        setMessage("Exception. " + err);
-        console.error("fetch assignment error " + err);
-      });
-  };
+    const handleClose = () => {
+        setOpen(false);
+        props.onClose();
+    };
 
-  const onChangeInput = (e) => {
-    setMessage('');
-    setAssignment({
-      ...assignment,
-      [e.target.name]: e.target.value,
-    });
-  };
+    const handleChange = (event) => {
+        setAssignment({...assignment, [event.target.name]:event.target.value });
+    }
 
-  const updateAssignment = () => {
-    setMessage('');
-    console.log("Assignment.update ");
-    fetch(`${SERVER_URL}/assignment/${assignmentId}`, {
-      method: 'PUT', // Use PUT method for updating
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(assignment),
-    })
-      .then((res) => {
-        if (res.ok) {
-          fetchAssignment();
-          setMessage("Assignment updated.");
-        } else {
-          setMessage("Update error. " + res.status);
-          console.error('Update assignment error =' + res.status);
-        }
-      })
-      .catch((err) => {
-        setMessage("Exception. " + err);
-        console.error('Update assignment exception =' + err);
-      });
-  };
+    const saveAssignment = () => {
+        fetch(`${SERVER_URL}/assignment/${assignment.id}`,
+            {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', },
+                body: JSON.stringify(assignment)
+            }
+        )
+            .then((response) => {
+                if (response.ok) {
+                    setMessage('Assignment saved.');
+                } else {
+                    setMessage("Save failed. " + response.status);
+                }
+            } )
+            .catch((err) =>  { setMessage('Error. '+err) } );
+    }
 
-  const headers = ['Assignment Name', 'Due Date', 'courseID'];
-
-  return (
-    <div>
-            <h3>Edit assignments</h3>
-            <div margin="auto" >
-                <h4>{message}&nbsp;</h4>
-
-                <table className="Center">
-                    <thead>
-                        <tr>
-                            {headers.map((title, idx) => (<th key={idx}>{title}</th>))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <input name="assignmentName"
-                                    value={(assignment.assignmentName) ? assignment.assignmentName : ""}
-                                    type="text"
-                                    onChange={(e) => onChangeInput(e)} />
-                            </td>
-                            <td>
-                                {assignment.courseTitle}
-                            </td>
-                            <td>
-                                <input name="dueDate"
-                                    value={(assignment.dueDate) ? assignment.dueDate : ""}
-                                    type="text"
-                                    onChange={(e) => onChangeInput(e)} />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button id="sassignment" type="button" margin="auto" onClick={updateAssignment}> Save Changes </button>
-
-            </div>
+    return (
+        <div>
+            <button type="button" margin="auto" onClick={handleOpen}>Edit</button>
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>Edit Assignment</DialogTitle>
+                <DialogContent  style={{paddingTop: 20}} >
+                    <h4>{message}</h4>
+                    <TextField fullWidth label="Id" name="id" value={assignment.id} InputProps={{readOnly: true, }}/>
+                    <TextField autoFocus fullWidth label="Name" name="assignmentName" value={assignment.assignmentName} onChange={handleChange}  />
+                    <TextField fullWidth label="Due Date" name="dueDate" value={assignment.dueDate} onChange={handleChange}  />
+                </DialogContent>
+                <DialogActions>
+                    <Button color="secondary" onClick={handleClose}>Close</Button>
+                    <Button color="primary" onClick={saveAssignment}>Save</Button>
+                </DialogActions>
+            </Dialog>
         </div>
-  );
+    );
 }
 
 export default EditAssignment;
